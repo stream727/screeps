@@ -1,0 +1,136 @@
+var roleHarvester = require('role.harvester');
+var roleBuilder = require('role.builder');
+var roleUpgrader = require('role.upgrader');
+var roleRepairer= require('role.repairer');
+var roleClaimer= require('role.claimer');
+var roleCarrier= require('role.carrier');
+var roleAttacker= require('role.attacker');
+var autospawn = require('autospawn');
+var actExpand = require('act.expand');
+var actReturn = require('act.return');
+var memories = require('memories');
+//var functions = require('functions');
+
+function exitAxis(){
+  var axis = [];
+  for(x=0;  x<25;   x++){
+      for(y=0;  y<25 ;  y++){
+    axis.push([x,y])
+  }}
+
+  return axis;
+}
+
+function compareArray(a,b){
+    var newarray = []
+    for(i=0;i<a.length;i++){
+        for(j=0;j<b.length;j++){
+            if(a[i].toString()==b[j].toString()){
+                newarray.push(a[i])
+            }
+        }
+    }
+    return newarray
+}
+
+function creepAtEdge(pos){
+    if(compareArray(exitAxis(), [[Object.values(pos)[0],Object.values(pos)[1]]])==''){
+        return true   
+    }
+    else {
+        false
+    }
+}
+
+
+
+module.exports.loop = function () {
+
+
+    var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
+    var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader');
+    var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
+    var repairers = _.filter(Game.creeps, (creep) => creep.memory.role == 'repairer');
+    var claimers = _.filter(Game.creeps, (creep) => creep.memory.role == 'claimer');
+    var carriers = _.filter(Game.creeps, (creep) => creep.memory.role == 'carrier');
+    var attackers = _.filter(Game.creeps, (creep) => creep.memory.role == 'attacker');
+        console.log('Harvesters: ' + harvesters.length + '; Upgraders: ' 
+    + upgraders.length + '; Builders: ' + builders.length+'; Repairer: ' 
+    + repairers.length+'; Claimer: ' + claimers.length + '; Carrier: ' + carriers.length+ '; Attacker: ' + attackers.length);
+
+    for(var name in Game.rooms) {
+        var room = Game.rooms[name];
+        
+        console.log('Room "'+name+'" has '+room.energyAvailable+' energy');
+        
+        autospawn.run(room)
+
+        for(var name in Game.creeps) {
+            var creep = Game.creeps[name];
+            
+            memories.run(creep)
+            
+            if (creep.ticksToLive<150){
+                creep.say('RECYCLE')
+                if (Game.spawns['Spawn1'].recycleCreep(creep) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(Game.spawns['Spawn1'], {visualizePathStyle: {stroke: '#ffaa00'}});
+                }
+                
+            }
+            else if ( Object.keys(Game.constructionSites).length< 80&& creepAtEdge(creep.pos) == false &&creep.room.lookForAt(LOOK_STRUCTURES,creep.pos,
+                {filter: {structureType: STRUCTURE_ROAD}})==''&&creep.room.lookForAt(LOOK_CONSTRUCTION_SITES,creep.pos)==''){
+	            creep.room.createConstructionSite(creep.pos,STRUCTURE_ROAD)
+
+	        }
+            else if (((creep.memory.role!='harvester'&&creep.memory.source==null&&creep.memory.containerout==null&&creep.memory.storageout==null)
+            ||(creep.memory.role=='harvester'&&creep.memory.source==null))&&!creep.memory.working&&creep.ticksToLive>300){
+            
+                
+
+                actExpand.run(creep)
+            }
+            else if ((creep.memory.target==null && creep.memory.working&&!creep.memory.sameRmSpawn)||
+            (creep.memory.role=='carrier'&&creep.memory.containerout==null&&creep.memory.target==null)||creep.ticksToLive<300){
+                actReturn.run(creep)
+                creep.memory.expand=false
+            }
+            else{
+                
+                if(creep.memory.role == 'harvester') {
+                    roleHarvester.run(creep);
+                }
+                if(creep.memory.role == 'builder') {
+                    
+                    roleBuilder.run(creep);
+                }
+                if(creep.memory.role == 'upgrader') {
+                    roleUpgrader.run(creep);
+                }
+                if(creep.memory.role == 'repairer') {
+                    roleRepairer.run(creep);
+                }
+                if(creep.memory.role == 'claimer') {
+                    roleClaimer.run(creep);
+                    actExpand.run(creep)
+                }
+                if(creep.memory.role == 'carrier') {
+                    roleCarrier.run(creep);
+                }
+                if(creep.memory.role == 'attacker') {
+                    if(creep.memory.target!=null) {
+                        roleAttacker.run(creep);
+                    }
+                    else{
+                        actExpand.run(creep)
+                        creep.say('AYE')
+                    }
+                    
+                }
+            }
+            
+                
+            
+        }
+    }
+
+}
