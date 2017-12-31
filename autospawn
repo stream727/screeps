@@ -1,0 +1,178 @@
+/*
+ * Module code goes here. Use 'module.exports' to export things:
+ * module.exports.thing = 'a thing';
+ *
+ * You can import it from another modules like this:
+ * var mod = require('autospawn');
+ * mod.thing == 'a thing'; // true
+ */
+ 
+
+var autospawn = {
+   run: function(room) { 
+
+    var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
+    var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader');
+    var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
+    var repairers = _.filter(Game.creeps, (creep) => creep.memory.role == 'repairer');
+    var claimers = _.filter(Game.creeps, (creep) => creep.memory.role == 'claimer');
+    var carriers = _.filter(Game.creeps, (creep) => creep.memory.role == 'carrier');
+    var attackers = _.filter(Game.creeps, (creep) => creep.memory.role == 'attacker');
+
+    var minnum_harvesters = 5
+    var minnum_upgraders = 4
+    var minnum_builders = 6
+    var minnum_repairers = 4
+    var minnum_claimers = 3
+    var minnum_carriers = 3
+
+    if (room.find(FIND_HOSTILE_CREEPS)!=null&&room.find(FIND_HOSTILE_CREEPS)!=''){
+        var minnum_attackers =  3
+    }
+    else {
+        var minnum_attackers = 0
+    }
+
+
+
+
+        
+        function getRandomInt(max) {
+            return Math.floor( Math.random() * (max + 1) ) ;
+        }
+        function builder_stats(enav) {
+            var builder_stats = [CARRY,CARRY,CARRY,CARRY,MOVE,MOVE]
+            for(let  i=0; i<Math.floor((enav-300)/125); i++){
+                builder_stats.push(WORK)
+            }
+
+            for(let  j=0; j<Math.ceil(Math.floor((enav-300)/125)/2); j++){
+                builder_stats.push(MOVE)
+            }
+            return builder_stats
+        }
+        function carrier_stats(enav) {
+            if(carriers.length<2){
+                return [CARRY,CARRY,CARRY,CARRY,MOVE,MOVE]
+            }
+            else {
+                var carrier_stats = []
+                for(let  i=0; i<Math.floor((enav/25)/3); i++){
+                    carrier_stats.push(CARRY)
+                }
+                
+                for(let  j=0; j<Math.floor((enav+50)/150); j++){
+                    carrier_stats.push(MOVE)
+                }
+                return carrier_stats
+            }
+        }
+        function harvester_stats(enav) {
+            if(harvesters.length<3){return [WORK,CARRY,MOVE]
+            }
+            else {
+                var harvester_stats = [CARRY,CARRY,MOVE,MOVE,MOVE,MOVE]
+            for(let  i=0; i<Math.floor((enav-300)/100)-Math.floor(Math.floor((enav-150)/100)/5); i++){
+                harvester_stats.push(WORK)
+            }
+            for(let  i=0; i<Math.floor(Math.floor((enav-300)/100)/5)*2; i++){
+                harvester_stats.push(CARRY)
+            }
+            return harvester_stats
+            }
+        }
+        function repairer_stats(enav) {
+            var repairer_stats = [WORK,WORK,WORK,WORK,MOVE,MOVE]
+            for(let  i=0; i<Math.floor(((enav-500)/25)/3); i++){
+                repairer_stats.push(CARRY)
+            }
+            for(let  j=0; j<Math.floor((enav-450)/150); j++){
+                repairer_stats.push(MOVE)
+            }
+            return repairer_stats
+        }
+
+    
+    
+        
+        for(var name in Memory.creeps) {
+          if(!Game.creeps[name]) {
+                delete Memory.creeps[name];
+                console.log('Clearing non-existing creep memory:', name);
+            }
+       }
+        
+
+        
+        if( harvesters.length  > 2 && carriers.length  > 2 && attackers.length < minnum_attackers) {
+ 
+            var newName = 'Attacker' + getRandomInt(minnum_attackers*2)
+        
+            Game.spawns['Spawn1'].spawnCreep([TOUGH,TOUGH,TOUGH,TOUGH,TOUGH,TOUGH,MOVE,MOVE,MOVE,ATTACK,ATTACK,ATTACK,ATTACK,MOVE,MOVE], newName, 
+            {memory: {role: 'attacker', target: false, working: false,expand: false, pastRoom:[]}});
+            
+        }
+        else if(harvesters.length > 2  && carriers.length < minnum_carriers) {
+
+            var newName = 'Carrier' + getRandomInt(minnum_carriers*2)
+        
+            Game.spawns['Spawn1'].spawnCreep(carrier_stats(Game.rooms['E52N53'].energyCapacityAvailable), newName, 
+            {memory: {role: 'carrier', target: false, working: false,expand: false, pastRoom:[]}});
+        }
+        else if(harvesters.length < minnum_harvesters ) {
+ 
+            var newName = 'Harvester' + getRandomInt(minnum_harvesters*2);
+            
+            Game.spawns['Spawn1'].spawnCreep(harvester_stats(Game.rooms['E52N53'].energyCapacityAvailable), newName, 
+                {memory: {role: 'harvester',target: false, working: false,expand: false, pastRoom: []}});
+        }
+        else if(harvesters.length  > 2 && carriers.length  > 2 && repairers.length < minnum_repairers) {
+
+            var newName = 'Repairer' + getRandomInt(minnum_repairers*2)
+        
+   
+            Game.spawns['Spawn1'].spawnCreep(repairer_stats(Game.rooms['E52N53'].energyCapacityAvailable), newName, 
+            {memory: {role: 'repairer', target: false, working: false,expand: false, pastRoom:[]}});
+        }
+
+         else if(harvesters.length  > 2 && carriers.length  > 2 && upgraders.length < minnum_upgraders ) {
+
+            var newName = 'Upgrader' + getRandomInt(minnum_upgraders*2)
+            Game.spawns['Spawn1'].spawnCreep(builder_stats(Game.rooms['E52N53'].energyCapacityAvailable), newName, 
+                {memory: {role: 'upgrader', target: false, working: false,expand: false, pastRoom:[]}});
+        }
+
+
+         else if(harvesters.length  > 2 && carriers.length  > 2 && builders.length < minnum_builders  ) {
+ 
+            var newName = 'Builder' + getRandomInt(minnum_builders*2)
+        
+   
+            Game.spawns['Spawn1'].spawnCreep(builder_stats(Game.rooms['E52N53'].energyCapacityAvailable), newName, 
+            {memory: {role: 'builder', target: false, working: false,expand: false, pastRoom:[]}});
+        }
+            
+
+         else if(harvesters.length  > 2 && carriers.length  > 2 && claimers.length < minnum_claimers) {
+ 
+            var newName = 'Claimer' + getRandomInt(minnum_claimers*2)
+        
+   
+            Game.spawns['Spawn1'].spawnCreep([CLAIM,CLAIM,MOVE], newName, 
+            {memory: {role: 'claimer', target: false, working: false,expand: false, pastRoom:[]}});
+        }
+
+    
+    
+        if(Game.spawns['Spawn1'].spawning) { 
+            var spawningCreep = Game.creeps[Game.spawns['Spawn1'].spawning.name];
+            Game.spawns['Spawn1'].room.visual.text(
+            '🛠️' + spawningCreep.memory.role,
+            Game.spawns['Spawn1'].pos.x + 1, 
+            Game.spawns['Spawn1'].pos.y, 
+            {align: 'left', opacity: 0.8});
+        }
+   }
+}
+
+module.exports = autospawn;

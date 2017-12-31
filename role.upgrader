@@ -1,0 +1,50 @@
+/*
+ * Module code goes here. Use 'module.exports' to export things:
+ * module.exports.thing = 'a thing';
+ *
+ * You can import it from another modules like this:
+ * var mod = require('role.upgrader');
+ * mod.thing == 'a thing'; // true
+ */
+
+var roleUpgrader = {
+    run: function(creep) {
+        if(creep.memory.working && creep.carry.energy == 0) {
+            creep.memory.working = false;
+            creep.say('🔄 harvest');
+	    }
+	    if(!creep.memory.working && creep.carry.energy == creep.carryCapacity) {
+	        creep.memory.working = true;
+	        delete creep.memory.source
+	        creep.say('⬆️upgrading');
+	    }    
+
+	    
+	    if(!creep.memory.working) {
+            if (creep.memory.containerout!=null){
+                if(creep.memory.storageout!=null||creep.memory.storageout!=null){
+                    if (creep.withdraw(creep.memory.storageout, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
+                    creep.moveTo(creep.memory.storageout, {visualizePathStyle: {stroke: '#ffaa00'}});
+                    }
+                }
+                else if (creep.memory.containerout!=null){if (creep.withdraw(creep.memory.containerout, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
+                    creep.moveTo(creep.memory.containerout, {visualizePathStyle: {stroke: '#ffaa00'}});
+                    }
+                }
+            }
+    	    else {
+               if(creep.harvest(creep.memory.source) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(creep.memory.source, {visualizePathStyle: {stroke: '#ffaa00'}});
+                }
+        	}
+        }
+        else {
+            if(creep.upgradeController(creep.memory.target) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(creep.memory.target, {visualizePathStyle: {stroke: '#ffaa00'}},{ignoreCreeps: true});
+            
+            }
+        }
+	}
+}
+
+module.exports = roleUpgrader;

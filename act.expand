@@ -1,0 +1,31 @@
+/*
+ * Module code goes here. Use 'module.exports' to export things:
+ * module.exports.thing = 'a thing';
+ *
+ * You can import it from another modules like this:
+ * var mod = require('expand');
+ * mod.thing == 'a thing'; // true
+ */
+var actExpand = {
+   run: function(creep) {
+
+            creep.memory.route=[]
+            creep.memory.route = creep.room.find(FIND_EXIT)// 
+
+            
+            if(creep.memory.route5 != null) {
+
+                creep.memory.expand=true
+                creep.say('EXPAND!!')
+               
+                    
+                creep.moveTo(creep.memory.route5 , {visualizePathStyle: {stroke: '#ffffff'}});
+             }
+             else{
+                creep.say('NOEXIT')
+                creep.memory.expand=false
+             }
+   }
+    
+}
+module.exports = actExpand;
